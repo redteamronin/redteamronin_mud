@@ -169,11 +169,11 @@ Thank you for playing.
     }
   }, [gameState]);
 
-  const loadGame = async () => {
+  const loadGame = () => {
     try {
-      const savedState = await window.storage.get('mud-game-state');
+      const savedState = localStorage.getItem('mud-game-state');
       if (savedState) {
-        const state = JSON.parse(savedState.value);
+        const state = JSON.parse(savedState);
         setPlayer(state.player);
         setLocation(state.location);
         setHp(state.hp);
@@ -191,9 +191,9 @@ Thank you for playing.
     }
   };
 
-  const saveGame = async (state) => {
+  const saveGame = (state) => {
     try {
-      await window.storage.set('mud-game-state', JSON.stringify(state));
+      localStorage.setItem('mud-game-state', JSON.stringify(state));
     } catch (error) {
       console.error('Failed to save game:', error);
     }
@@ -239,7 +239,7 @@ Thank you for playing.
   };
 
   const attack = () => {
-    if (!currentEnemy) return;
+    if (!currentEnemy || hp <= 0) return;
 
     const playerDamage = Math.max(1, player.attack + Math.floor(Math.random() * 10) - 5);
     const enemyDamage = Math.max(0, currentEnemy.attack - player.defense + Math.floor(Math.random() * 8) - 4);
@@ -279,9 +279,12 @@ Thank you for playing.
       
       const newHp = hp - enemyDamage;
       if (newHp <= 0) {
+        console.log('Player died, transitioning to terminal...');
         setHp(0);
+        setCurrentEnemy(null);
         addLog('You have fallen...', 'death');
         setTimeout(() => {
+          console.log('Executing terminal transition');
           transitionToTerminal();
         }, 2000);
       } else {
@@ -291,7 +294,7 @@ Thank you for playing.
   };
 
   const flee = () => {
-    if (!currentEnemy) return;
+    if (!currentEnemy || hp <= 0) return;
     
     if (Math.random() > 0.5) {
       addLog('You successfully fled from combat!', 'system');
@@ -301,9 +304,12 @@ Thank you for playing.
       addLog(`You failed to escape! The ${currentEnemy.name} hits you for ${damage} damage!`, 'combat');
       const newHp = hp - damage;
       if (newHp <= 0) {
+        console.log('Player died while fleeing, transitioning to terminal...');
         setHp(0);
+        setCurrentEnemy(null);
         addLog('You have fallen...', 'death');
         setTimeout(() => {
+          console.log('Executing terminal transition');
           transitionToTerminal();
         }, 2000);
       } else {
@@ -360,9 +366,16 @@ Thank you for playing.
     }
   };
 
-  const transitionToTerminal = async () => {
-    await window.storage.delete('mud-game-state');
+  const transitionToTerminal = () => {
+    console.log('Transitioning to terminal interface');
+    try {
+      localStorage.removeItem('mud-game-state');
+      console.log('Game state cleared from localStorage');
+    } catch (error) {
+      console.error('Failed to clear save:', error);
+    }
     setGameState('terminal');
+    console.log('Game state set to: terminal');
     setTerminalLines([
       '> SYSTEM REBOOT INITIATED',
       '> Loading MAINFRAME.SYS...',
@@ -584,28 +597,28 @@ Thank you for playing.
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={attack}
-                disabled={!currentEnemy}
+                disabled={!currentEnemy || hp <= 0}
                 className="bg-red-900 hover:bg-red-800 disabled:bg-gray-700 disabled:text-gray-500 border border-red-600 disabled:border-gray-600 px-4 py-2 rounded font-mono transition-all"
               >
                 Attack
               </button>
               <button
                 onClick={flee}
-                disabled={!currentEnemy}
+                disabled={!currentEnemy || hp <= 0}
                 className="bg-yellow-900 hover:bg-yellow-800 disabled:bg-gray-700 disabled:text-gray-500 border border-yellow-600 disabled:border-gray-600 px-4 py-2 rounded font-mono transition-all"
               >
                 Flee
               </button>
               <button
                 onClick={rest}
-                disabled={currentEnemy}
+                disabled={currentEnemy || hp <= 0}
                 className="bg-blue-900 hover:bg-blue-800 disabled:bg-gray-700 disabled:text-gray-500 border border-blue-600 disabled:border-gray-600 px-4 py-2 rounded font-mono transition-all"
               >
                 Rest
               </button>
               <button
                 onClick={encounterEnemy}
-                disabled={currentEnemy}
+                disabled={currentEnemy || hp <= 0}
                 className="bg-purple-900 hover:bg-purple-800 disabled:bg-gray-700 disabled:text-gray-500 border border-purple-600 disabled:border-gray-600 px-4 py-2 rounded font-mono transition-all"
               >
                 Search
@@ -620,7 +633,7 @@ Thank you for playing.
                 <button
                   key={loc}
                   onClick={() => move(loc)}
-                  disabled={currentEnemy}
+                  disabled={currentEnemy || hp <= 0}
                   className="w-full bg-green-900 hover:bg-green-800 disabled:bg-gray-700 disabled:text-gray-500 border border-green-600 disabled:border-gray-600 px-4 py-2 rounded font-mono transition-all"
                 >
                   Go to {locations[loc]?.name}
