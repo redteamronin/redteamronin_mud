@@ -57,8 +57,6 @@ The game now features a three-tier progression system with two distinct worlds a
 **Available Files:**
 - `README.txt` - Standard welcome message
 - `secrets.dat` - Encrypted, cannot read
-- `log_XXX.txt` - System logs
-- `core.sys` - System file
 
 **Commands:** help, about, whoami, status, files, read, clear, exit
 
@@ -73,8 +71,6 @@ The game now features a three-tier progression system with two distinct worlds a
 - `README.txt` - Updated welcome message
 - `secrets.dat` - **DECRYPTED** - Reveals the next trial
 - `victory.txt` - Your victory report
-- `log_XXX.txt` - System logs
-- `core.sys` - System file
 
 **Commands:** All basic commands + `journey`
 
@@ -93,8 +89,6 @@ The game now features a three-tier progression system with two distinct worlds a
 - `secrets.dat` - Decrypted
 - `victory.txt` - Phase 1 victory
 - `truth.txt` - **NEW** - The ultimate revelation
-- `log_XXX.txt` - System logs
-- `core.sys` - System file
 
 **Special Features:**
 - Different terminal boot sequence

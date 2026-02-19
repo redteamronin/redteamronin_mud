@@ -155,11 +155,9 @@ Security: ${terminalLevel === 0 ? 'MAXIMUM' : terminalLevel === 1 ? 'ELEVATED' :
         return `Directory of /home/user:
   README.txt       1.2 KB   ${new Date().toLocaleDateString()}
   secrets.dat      0.5 KB   ${secretsStatus}
-${victoryFile}${finalFile}  log_${Math.floor(Math.random()*999)}.txt     2.1 KB   ${new Date().toLocaleDateString()}
-  core.sys         8.7 KB   SYSTEM
-
-${terminalLevel === 0 ? '4' : terminalLevel === 1 ? '5' : '6'} File(s)     ${terminalLevel === 0 ? '12.5' : terminalLevel === 1 ? '13.3' : '14.4'} KB
-Free Space:   ${terminalLevel === 0 ? '115.5' : terminalLevel === 1 ? '114.7' : '113.6'} KB`;
+${victoryFile}${finalFile}
+${terminalLevel === 0 ? '2' : terminalLevel === 1 ? '3' : '4'} File(s)     ${terminalLevel === 0 ? '1.7' : terminalLevel === 1 ? '2.5' : '3.6'} KB
+Free Space:   126.4 KB`;
       }
     },
     read: {
@@ -243,12 +241,10 @@ Beyond the dragon lies something older.
 The Ancient Yeti awaits in the frozen north.
 Those who conquered the dragon may face what lies beyond.
 
-To continue the trial, use command: journey
-
 WARNING: None have returned from the tundra.
 This path leads only to one end.
 
-Proceed? [y/n]`;
+To continue the trial, type: journey`;
           } else {
             return 'ERROR: File is encrypted. Access denied.';
           }
