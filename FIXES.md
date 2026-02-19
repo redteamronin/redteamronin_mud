@@ -1,5 +1,19 @@
 # Quick Fixes for Common Issues
 
+## NEW FEATURE: Victory Ending (v3)
+**What's new:**
+- Players who defeat the Ancient Dragon in the Dragon's Lair now get a special victory ending
+- Victory players get elevated clearance in the terminal
+- New classified file `victory.txt` only appears if you beat the game
+- Terminal welcome message changes based on victory status
+- `whoami` command now shows VICTOR or FALLEN status
+
+**How to achieve victory:**
+- Reach the Dragon's Lair
+- Defeat the Ancient Dragon
+- Survive with HP > 0
+- Terminal will appear after 4 seconds with special message
+
 ## CRITICAL FIX: Terminal Transition Not Working
 **Status:** FIXED in v2
 

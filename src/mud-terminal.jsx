@@ -15,6 +15,8 @@ const MUDTerminal = () => {
   const [terminalInput, setTerminalInput] = useState('');
   const [terminalHistory, setTerminalHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [terminalLevel, setTerminalLevel] = useState(0); // 0=basic, 1=elite, 2=final
+  const [currentWorld, setCurrentWorld] = useState('woods'); // 'woods' or 'tundra'
   const logEndRef = useRef(null);
   const terminalEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -30,10 +32,17 @@ const MUDTerminal = () => {
     wolf: { name: 'Dire Wolf', hp: 45, attack: 12, xp: 25, description: 'A massive wolf with glowing red eyes' },
     troll: { name: 'Forest Troll', hp: 80, attack: 18, xp: 40, description: 'A hulking brute with regenerating flesh' },
     wraith: { name: 'Shadow Wraith', hp: 60, attack: 22, xp: 50, description: 'An ethereal being that feeds on fear' },
-    dragon: { name: 'Ancient Dragon', hp: 150, attack: 30, xp: 100, description: 'The apex predator of these woods' }
+    dragon: { name: 'Ancient Dragon', hp: 150, attack: 30, xp: 100, description: 'The apex predator of these woods' },
+    // Tundra enemies
+    ice_wolf: { name: 'Ice Wolf', hp: 70, attack: 20, xp: 35, description: 'A frost-covered predator with icy fangs' },
+    frost_giant: { name: 'Frost Giant', hp: 120, attack: 28, xp: 60, description: 'A towering giant wielding an ice club' },
+    wendigo: { name: 'Wendigo', hp: 90, attack: 32, xp: 75, description: 'A cursed spirit of endless hunger' },
+    ice_drake: { name: 'Ice Drake', hp: 150, attack: 38, xp: 90, description: 'A dragon of ice and frost' },
+    yeti: { name: 'Ancient Yeti', hp: 999, attack: 50, xp: 200, description: 'The immortal guardian of the frozen wastes' }
   };
 
   const locations = {
+    // Woods locations
     start: {
       name: 'Forest Entrance',
       description: 'You stand at the edge of a dark forest. The trees loom overhead, blocking out most of the sunlight.',
@@ -57,6 +66,31 @@ const MUDTerminal = () => {
       description: 'You enter a cave littered with bones and treasure. The air grows hot. This is the end of your journey.',
       encounters: ['dragon'],
       next: []
+    },
+    // Tundra locations
+    tundra_start: {
+      name: 'Frozen Wasteland',
+      description: 'An endless expanse of snow stretches before you. The wind howls with an otherworldly fury.',
+      encounters: ['ice_wolf'],
+      next: ['tundra_deeper']
+    },
+    tundra_deeper: {
+      name: 'Glacial Valley',
+      description: 'Massive ice formations tower above. The temperature drops further. Something moves in the distance.',
+      encounters: ['ice_wolf', 'frost_giant', 'wendigo'],
+      next: ['tundra_peaks', 'tundra_deeper']
+    },
+    tundra_peaks: {
+      name: 'Frozen Peaks',
+      description: 'You climb higher into the mountains. Ice drakes circle overhead. The summit beckons.',
+      encounters: ['wendigo', 'ice_drake'],
+      next: ['tundra_deeper', 'yeti_throne']
+    },
+    yeti_throne: {
+      name: 'The Yeti\'s Throne',
+      description: 'A massive ice throne sits atop the highest peak. The Ancient Yeti waits. This is where legends die.',
+      encounters: ['yeti'],
+      next: []
     }
   };
 
@@ -64,18 +98,26 @@ const MUDTerminal = () => {
     help: {
       description: 'Display available commands',
       execute: () => {
-        const cmds = Object.keys(terminalCommands).map(cmd => 
-          `  ${cmd.padEnd(12)} - ${terminalCommands[cmd].description}`
-        ).join('\n');
+        const cmds = Object.keys(terminalCommands)
+          .filter(cmd => {
+            // Hide journey command unless at elite level
+            if (cmd === 'journey' && terminalLevel < 1) return false;
+            return true;
+          })
+          .map(cmd => 
+            `  ${cmd.padEnd(12)} - ${terminalCommands[cmd].description}`
+          ).join('\n');
         return `Available commands:\n${cmds}`;
       }
     },
     about: {
       description: 'Information about this system',
       execute: () => {
+        const accessLevel = terminalLevel === 0 ? 'STANDARD' : terminalLevel === 1 ? 'ELITE' : 'OMEGA';
         return `MAINFRAME TERMINAL v2.4.1
 Connected to: CLASSIFIED
 Uptime: ${Math.floor(Math.random() * 1000)} days
+Access Level: ${accessLevel}
 
 You have accessed a restricted system. All activity is logged.`;
       }
@@ -83,7 +125,15 @@ You have accessed a restricted system. All activity is logged.`;
     whoami: {
       description: 'Display current user',
       execute: () => {
-        return player ? `User: ${player.name}\nClass: ${player.class}\nFinal Level: ${level}\nTotal XP: ${xp}` : 'User: GUEST';
+        if (!player) return 'User: GUEST';
+        let status = 'FALLEN';
+        if (terminalLevel === 2) status = 'TRANSCENDENT';
+        else if (terminalLevel === 1) status = 'VICTOR';
+        return `User: ${player.name}
+Class: ${player.class}
+Final Level: ${level}
+Total XP: ${xp}
+Status: ${status}`;
       }
     },
     status: {
@@ -93,20 +143,23 @@ You have accessed a restricted system. All activity is logged.`;
 Memory: 64KB / 128KB
 Processes: 12 running
 Network: CONNECTED
-Security: MAXIMUM`;
+Security: ${terminalLevel === 0 ? 'MAXIMUM' : terminalLevel === 1 ? 'ELEVATED' : 'OMEGA CLEARANCE'}`;
       }
     },
     files: {
       description: 'List available files',
       execute: () => {
+        const victoryFile = terminalLevel >= 1 ? '  victory.txt     0.8 KB   CLASSIFIED\n' : '';
+        const finalFile = terminalLevel >= 2 ? '  truth.txt       1.1 KB   OMEGA\n' : '';
+        const secretsStatus = terminalLevel >= 1 ? 'DECRYPTED' : 'ENCRYPTED';
         return `Directory of /home/user:
   README.txt       1.2 KB   ${new Date().toLocaleDateString()}
-  secrets.dat      0.5 KB   ENCRYPTED
-  log_${Math.floor(Math.random()*999)}.txt     2.1 KB   ${new Date().toLocaleDateString()}
+  secrets.dat      0.5 KB   ${secretsStatus}
+${victoryFile}${finalFile}  log_${Math.floor(Math.random()*999)}.txt     2.1 KB   ${new Date().toLocaleDateString()}
   core.sys         8.7 KB   SYSTEM
 
-4 File(s)     12.5 KB
-Free Space:   115.5 KB`;
+${terminalLevel === 0 ? '4' : terminalLevel === 1 ? '5' : '6'} File(s)     ${terminalLevel === 0 ? '12.5' : terminalLevel === 1 ? '13.3' : '14.4'} KB
+Free Space:   ${terminalLevel === 0 ? '115.5' : terminalLevel === 1 ? '114.7' : '113.6'} KB`;
       }
     },
     read: {
@@ -119,20 +172,109 @@ Free Space:   115.5 KB`;
         if (file === 'readme.txt') {
           return `WELCOME TO THE MAINFRAME
 
-You've completed your journey through the woods.
+You've completed your journey through the ${currentWorld === 'tundra' ? 'frozen wastes' : 'woods'}.
 What you experienced was not just a game.
 
 Every choice you made, every battle you fought,
-every step deeper into the forest...
+every step deeper into the ${currentWorld === 'tundra' ? 'tundra' : 'forest'}...
 it was all part of the test.
 
 Thank you for playing.
 
 - The Architect`;
+        } else if (file === 'victory.txt') {
+          if (terminalLevel >= 1) {
+            return `CLASSIFIED DOCUMENT - LEVEL 5 CLEARANCE
+
+Subject: Trial Result - ${player?.name || 'Unknown'}
+
+The subject has achieved what was thought impossible.
+They conquered the Dark Woods. Defeated the Ancient Dragon.
+Survived against all odds.
+
+Classification: EXCEPTIONAL
+
+This individual has proven themselves worthy.
+The test is complete.
+
+Recommendation: APPROVED FOR NEXT PHASE
+
+[END TRANSMISSION]`;
+          } else {
+            return 'ERROR: File not found.';
+          }
+        } else if (file === 'truth.txt') {
+          if (terminalLevel >= 2) {
+            return `OMEGA CLEARANCE DOCUMENT
+
+Subject: The Truth
+
+You have reached the end of all trials.
+The Woods. The Tundra. The Ancient Yeti.
+
+Every warrior falls eventually.
+There is no victory against death itself.
+
+You were not meant to win.
+You were meant to understand.
+
+The journey was the test.
+Your persistence was the answer.
+
+Status: COMPLETE
+Classification: OMEGA
+
+You are free now.
+
+[SYSTEM TERMINAL - END OF LINE]`;
+          } else {
+            return 'ERROR: File not found.';
+          }
         } else if (file === 'secrets.dat') {
-          return 'ERROR: File is encrypted. Access denied.';
+          if (terminalLevel >= 1) {
+            return `DECRYPTION SUCCESSFUL
+
+ELITE ACCESS GRANTED
+
+The woods were only the beginning.
+Beyond the flames lies the frost.
+Beyond the dragon lies something older.
+
+The Ancient Yeti awaits in the frozen north.
+Those who conquered the dragon may face what lies beyond.
+
+To continue the trial, use command: journey
+
+WARNING: None have returned from the tundra.
+This path leads only to one end.
+
+Proceed? [y/n]`;
+          } else {
+            return 'ERROR: File is encrypted. Access denied.';
+          }
         } else {
           return `ERROR: File '${file}' not found.`;
+        }
+      }
+    },
+    journey: {
+      description: 'Begin the next trial',
+      execute: () => {
+        if (terminalLevel >= 1 && terminalLevel < 2) {
+          setTimeout(() => {
+            startTundraJourney();
+          }, 2000);
+          return `Initiating transfer protocol...
+Loading coordinates...
+Temperature dropping...
+
+The frozen wastes await you, ${player?.name}.
+
+[TRANSFERRING...]`;
+        } else if (terminalLevel === 0) {
+          return 'ERROR: Unknown command. Type "help" for available commands.';
+        } else {
+          return 'The journey is complete. There is nowhere left to go.';
         }
       }
     },
@@ -182,6 +324,8 @@ Thank you for playing.
         setXp(state.xp);
         setInventory(state.inventory);
         setGameLog(state.gameLog || []);
+        setCurrentWorld(state.currentWorld || 'woods');
+        setTerminalLevel(state.terminalLevel || 0);
         setGameState('playing');
       } else {
         setGameState('character-select');
@@ -263,6 +407,32 @@ Thank you for playing.
       setXp(newXp);
       setCurrentEnemy(null);
       
+      // Check if player defeated the dragon in the final location
+      if (currentEnemy.name === 'Ancient Dragon' && location === 'lair') {
+        addLog('', 'system');
+        addLog('The mighty dragon falls. The forest grows silent.', 'victory');
+        addLog('You have conquered the Dark Woods.', 'victory');
+        addLog('Elite access granted. Secrets await...', 'system');
+        setTimeout(() => {
+          console.log('Victory! Transitioning to elite terminal...');
+          transitionToTerminal(1);
+        }, 4000);
+        return;
+      }
+      
+      // Check if player defeated the Yeti (shouldn't happen, but just in case)
+      if (currentEnemy.name === 'Ancient Yeti') {
+        addLog('', 'system');
+        addLog('The impossible has occurred. The Yeti falls.', 'victory');
+        addLog('...but this was not meant to be.', 'system');
+        addLog('Reality fractures. The system crashes.', 'death');
+        setTimeout(() => {
+          console.log('Yeti defeated (impossible). Final terminal...');
+          transitionToTerminal(2);
+        }, 4000);
+        return;
+      }
+      
       saveGame({
         player,
         location,
@@ -283,9 +453,13 @@ Thank you for playing.
         setHp(0);
         setCurrentEnemy(null);
         addLog('You have fallen...', 'death');
+        
+        // Determine terminal level based on world
+        const termLevel = currentWorld === 'tundra' ? 2 : 0;
+        
         setTimeout(() => {
-          console.log('Executing terminal transition');
-          transitionToTerminal();
+          console.log(`Executing terminal transition to level ${termLevel}`);
+          transitionToTerminal(termLevel);
         }, 2000);
       } else {
         setHp(newHp);
@@ -308,9 +482,13 @@ Thank you for playing.
         setHp(0);
         setCurrentEnemy(null);
         addLog('You have fallen...', 'death');
+        
+        // Determine terminal level based on world
+        const termLevel = currentWorld === 'tundra' ? 2 : 0;
+        
         setTimeout(() => {
-          console.log('Executing terminal transition');
-          transitionToTerminal();
+          console.log(`Executing terminal transition to level ${termLevel}`);
+          transitionToTerminal(termLevel);
         }, 2000);
       } else {
         setHp(newHp);
@@ -366,27 +544,100 @@ Thank you for playing.
     }
   };
 
-  const transitionToTerminal = () => {
-    console.log('Transitioning to terminal interface');
+  const startTundraJourney = () => {
+    console.log('Starting tundra journey');
+    setCurrentWorld('tundra');
+    setLocation('tundra_start');
+    setGameState('playing');
+    setGameLog([]);
+    // Keep player stats but reset HP
+    setHp(maxHp);
+    addLog(`The air grows cold. You step into the frozen wastes...`, 'system');
+    addLog(locations.tundra_start.description, 'location');
+    addLog(`Your trials in the woods have made you stronger. But here, death is certain.`, 'system');
+    
+    saveGame({
+      player,
+      location: 'tundra_start',
+      hp: maxHp,
+      maxHp,
+      level,
+      xp,
+      inventory,
+      gameLog: [],
+      currentWorld: 'tundra',
+      terminalLevel: 1
+    });
+  };
+
+  const transitionToTerminal = (level = 0) => {
+    console.log(`Transitioning to terminal interface - Level ${level}`);
     try {
       localStorage.removeItem('mud-game-state');
       console.log('Game state cleared from localStorage');
     } catch (error) {
       console.error('Failed to clear save:', error);
     }
+    
+    setTerminalLevel(level);
     setGameState('terminal');
     console.log('Game state set to: terminal');
-    setTerminalLines([
-      '> SYSTEM REBOOT INITIATED',
-      '> Loading MAINFRAME.SYS...',
-      '> Establishing connection...',
-      '> ',
-      '> CONNECTION ESTABLISHED',
-      '> Welcome to the MAINFRAME',
-      '> ',
-      '> Type "help" for available commands',
-      '> '
-    ]);
+    
+    let welcomeLines;
+    
+    if (level === 2) {
+      // Final terminal - died to Yeti
+      welcomeLines = [
+        '> SYSTEM FAILURE DETECTED',
+        '> Core temperature: -273°C',
+        '> Life signs: NEGATIVE',
+        '> ',
+        '> REBOOTING...',
+        '> ',
+        '> OMEGA PROTOCOL ACTIVATED',
+        '> Welcome to the final terminal',
+        '> ',
+        '> You have seen the truth.',
+        '> The Yeti cannot be defeated.',
+        '> Death was always the answer.',
+        '> ',
+        '> Type "help" for available commands',
+        '> Type "read truth.txt" to understand',
+        '> '
+      ];
+    } else if (level === 1) {
+      // Elite terminal - beat dragon
+      welcomeLines = [
+        '> SYSTEM REBOOT INITIATED',
+        '> Loading MAINFRAME.SYS...',
+        '> Establishing connection...',
+        '> ',
+        '> CONNECTION ESTABLISHED',
+        '> Welcome to the MAINFRAME',
+        '> ',
+        '> STATUS: TRIAL COMPLETE - VICTORY ACHIEVED',
+        '> Clearance level: ELITE',
+        '> ',
+        '> Type "help" for available commands',
+        '> Type "read secrets.dat" to see what you\'ve unlocked',
+        '> '
+      ];
+    } else {
+      // Basic terminal - died in woods
+      welcomeLines = [
+        '> SYSTEM REBOOT INITIATED',
+        '> Loading MAINFRAME.SYS...',
+        '> Establishing connection...',
+        '> ',
+        '> CONNECTION ESTABLISHED',
+        '> Welcome to the MAINFRAME',
+        '> ',
+        '> Type "help" for available commands',
+        '> '
+      ];
+    }
+    
+    setTerminalLines(welcomeLines);
   };
 
   const handleTerminalCommand = (cmd) => {
@@ -451,10 +702,12 @@ Thank you for playing.
       <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black flex items-center justify-center p-4">
         <div className="max-w-4xl w-full">
           <h1 className="text-5xl font-bold text-green-400 text-center mb-4 font-mono">
-            THE DARK WOODS
+            {currentWorld === 'tundra' ? 'THE FROZEN WASTES' : 'THE DARK WOODS'}
           </h1>
           <p className="text-green-300 text-center mb-12 font-mono">
-            Choose your character and venture into the unknown...
+            {currentWorld === 'tundra' 
+              ? 'The cold will claim all. But how long will you last?'
+              : 'Choose your character and venture into the unknown...'}
           </p>
           <div className="grid md:grid-cols-3 gap-6">
             {characterClasses.map((char) => (
@@ -515,7 +768,7 @@ Thank you for playing.
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-black text-green-400 p-4">
+    <div className={`min-h-screen ${currentWorld === 'tundra' ? 'bg-gradient-to-b from-blue-950 via-slate-900 to-black' : 'bg-gradient-to-b from-gray-900 via-gray-800 to-black'} text-green-400 p-4`}>
       <div className="max-w-6xl mx-auto">
         <div className="grid md:grid-cols-3 gap-4 mb-4">
           <div className="bg-gray-900 border border-green-600 p-4 rounded">
@@ -542,6 +795,9 @@ Thank you for playing.
           <div className="bg-gray-900 border border-green-600 p-4 rounded">
             <h3 className="text-lg font-bold mb-2 font-mono">Location</h3>
             <div className="text-sm font-mono">
+              <div className="text-xs text-blue-400 mb-1">
+                {currentWorld === 'tundra' ? '❄ FROZEN WASTES' : '🌲 DARK WOODS'}
+              </div>
               <div className="text-yellow-400">{locations[location]?.name}</div>
             </div>
           </div>
