@@ -5,6 +5,68 @@ The game now features a three-tier progression system with two distinct worlds a
 
 ## The Journey
 
+### Shop System 🛒
+**Discovery:** The shop has a 40% chance to appear when you use the Search action
+
+**Currency:** XP (not gold!)
+
+**Mechanics:**
+- **Starting Gear**: Each class begins with basic equipment (cannot be sold or stolen)
+- **Found Loot**: 20% chance when searching (can be sold and stolen)
+- **Shop Items**: Purchased with XP (can be sold at 50% value, but NOT stolen)
+
+**Risk/Reward:**
+- **Resting** has a 30% chance for a thief to steal FOUND gear only
+- Shop-purchased items are safe from thieves (you paid good XP!)
+- Basic starting gear is also safe
+
+**Slots:**
+- **Weapon** - Increases attack
+- **Armor** - Increases defense  
+- **Accessory** - Various bonuses (HP, mixed stats)
+
+**Rules:**
+- Only one item per slot
+- Must unequip before buying a replacement
+- Unequipping is free
+- Selling returns 50% of purchase price
+- Gear carries over to the Tundra
+- Shop remains available once discovered
+
+**Starting Gear by Class:**
+- **Warrior**: Rusty Sword (+3 ATK), Old Chainmail (+3 DEF)
+- **Ranger**: Wooden Bow (+4 ATK), Worn Leather (+2 DEF)
+- **Mage**: Worn Staff (+5 ATK), Tattered Robes (+1 DEF)
+
+**Found Loot (Rare Drops):**
+- Found Dagger (+6 ATK) - Sell: 30 XP
+- Found Mace (+8 ATK) - Sell: 40 XP
+- Found Armor (+4 DEF) - Sell: 40 XP
+- Found Shield (+5 DEF) - Sell: 50 XP
+- Found Charm (+4 ATK, +2 DEF) - Sell: 60 XP
+
+**Available Items:**
+
+*Weapons:*
+- Iron Sword (50 XP) - +5 Attack | Sell: 25 XP
+- Steel Axe (150 XP) - +10 Attack | Sell: 75 XP
+- Enchanted Staff (200 XP) - +15 Attack | Sell: 100 XP
+- Dragon Slayer (400 XP) - +25 Attack | Sell: 200 XP
+
+*Armor:*
+- Leather Armor (50 XP) - +3 Defense | Sell: 25 XP
+- Chainmail (150 XP) - +6 Defense | Sell: 75 XP
+- Plate Armor (250 XP) - +10 Defense | Sell: 125 XP
+- Dragon Scale Mail (500 XP) - +15 Defense | Sell: 250 XP
+
+*Accessories:*
+- Ring of Vitality (100 XP) - +30 Max HP | Sell: 50 XP
+- Amulet of Power (200 XP) - +8 Attack, +4 Defense | Sell: 100 XP
+- Berserker Charm (300 XP) - +15 Attack, -5 Defense | Sell: 150 XP
+- Guardian Talisman (300 XP) - +12 Defense, -5 Attack | Sell: 150 XP
+
+---
+
 ### Phase 1: The Dark Woods
 **Goal:** Survive and defeat the Ancient Dragon
 
@@ -154,17 +216,35 @@ Omega Terminal (TRUE END)
 
 ## Tips for Players
 
+### General Strategy:
+1. **Discover the shop early** - Search actions: 40% shop, 20% loot, 40% enemy
+2. **Sell found loot** - Quick XP boost to buy better shop gear
+3. **Don't rest with found gear** - 30% chance of theft! Sell or replace first
+4. **Shop gear is safe** - Purchased items cannot be stolen
+5. **Balance your build** - Berserker Charm is high risk/reward
+
+### Economic Strategy:
+- **Early game**: Sell found loot, save for Iron Sword (50 XP)
+- **Mid game**: Found Charm (60 XP) → sell → buy Ring of Vitality (100 XP)
+- **Late game**: Save 400 XP for Dragon Slayer before dragon fight
+- **Selling**: Shop items sell for 50% value (emergency XP if needed)
+
 ### Surviving the Dark Woods:
 1. **Level up before boss fights** - Search for enemies to grind XP
-2. **Rest strategically** - Heal when out of combat (but may attract enemies)
-3. **Know when to flee** - 50% chance of success
-4. **Explore all locations** - Different areas have different enemy pools
+2. **Search frequently** - Get shop access and loot drops
+3. **Upgrade starting gear ASAP** - Basic gear is weak
+4. **Rest strategically** - Only rest when you have shop gear (safe from thieves)
+5. **Know when to flee** - 50% chance of success
+6. **Explore all locations** - Different areas have different enemy pools
+7. **Save XP for Dragon Slayer** - Makes the dragon fight much easier (400 XP)
 
 ### The Frozen Wastes (Post-Dragon):
-1. **You will die** - The Yeti is unbeatable (999 HP, 50 attack)
-2. **Your stats carry over** - You keep your level and max HP
-3. **Explore first** - Fight weaker enemies before facing the Yeti
-4. **There is no victory** - Death is the true ending
+1. **Your gear carries over** - Equipment purchased in woods works in tundra
+2. **You will die** - The Yeti is unbeatable (999 HP, 50 attack)
+3. **Your stats carry over** - You keep your level and max HP
+4. **Max out gear first** - Dragon Slayer + Dragon Scales + Amulet = best chance
+5. **Explore first** - Fight weaker enemies before facing the Yeti
+6. **There is no victory** - Death is the true ending
 
 ---
 

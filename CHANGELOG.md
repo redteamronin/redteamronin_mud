@@ -1,6 +1,76 @@
 # Changelog
 
-## v4.0 - Three-Tier System (Current)
+## v6.0 - Loot & Risk System (Current)
+**Date:** 2025-02-19
+
+### Major Features:
+- 🎒 **Starting Gear System** - Each class now starts with basic equipment
+- 💎 **Loot Drops** - 20% chance to find gear when searching
+- 🏪 **Selling System** - Sell items back to shop for 50% value
+- 🦹 **Thief Mechanic** - 30% chance to lose FOUND gear when resting
+- 🛡️ **Gear Protection** - Shop-purchased and starting gear cannot be stolen
+
+### Starting Gear:
+- **Warrior**: Rusty Sword (+3 ATK), Old Chainmail (+3 DEF)
+- **Ranger**: Wooden Bow (+4 ATK), Worn Leather (+2 DEF)
+- **Mage**: Worn Staff (+5 ATK), Tattered Robes (+1 DEF)
+
+### Found Loot Items:
+- Found Dagger, Found Mace, Found Armor, Found Shield, Found Charm
+- All found items can be sold or stolen
+- Provides XP injection for better shop purchases
+
+### Balance Changes:
+- **Positive**: Loot drops provide extra XP through selling
+- **Negative**: Thieves can steal found gear during rest
+- **Strategic**: Players must choose between keeping risky found gear or selling for guaranteed XP
+- **Net Effect**: More dynamic economy, higher risk/reward
+
+### UI Improvements:
+- Sell buttons appear on equipped gear panel
+- Shows sell value for each item
+- Filters loot-only items from shop purchase display
+- Better visual feedback for gear status
+
+### Files Changed:
+- `src/mud-terminal.jsx` - Added loot system, thief mechanic, selling, starting gear
+- `GAME_GUIDE.md` - Updated with new mechanics and strategies
+- `CHANGELOG.md` - This file
+
+---
+
+## v5.0 - Shop System
+**Date:** 2025-02-19
+
+### Major Features:
+- 🛒 Added merchant shop with 12 unique items
+- ✨ Equipment system with 3 slots (weapon, armor, accessory)
+- ✨ Items purchased with XP (not gold)
+- ✨ Gear affects base stats (attack, defense, max HP)
+- ✨ Shop discovery through Search action (40% chance)
+- ✨ Gear persists across worlds (woods → tundra)
+- ✨ Unequip system (free, must unequip before buying replacement)
+
+### Items Added:
+**Weapons:** Iron Sword, Steel Axe, Enchanted Staff, Dragon Slayer  
+**Armor:** Leather Armor, Chainmail, Plate Armor, Dragon Scale Mail  
+**Accessories:** Ring of Vitality, Amulet of Power, Berserker Charm, Guardian Talisman
+
+### UI Improvements:
+- Stats panel now shows effective stats with gear bonuses
+- Shop panel with equipped gear display
+- Visual indicators for equipped items
+- Buy/Unequip buttons with proper state handling
+
+### Files Changed:
+- `src/mud-terminal.jsx` - Added shop system, gear logic, stat calculations
+- `GAME_GUIDE.md` - Added shop section and updated strategy tips
+- `README.md` - Updated features list
+- `CHANGELOG.md` - This file
+
+---
+
+## v4.0 - Three-Tier System
 **Date:** 2025-02-19
 
 ### Major Features:

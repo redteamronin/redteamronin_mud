@@ -17,15 +17,299 @@ const MUDTerminal = () => {
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [terminalLevel, setTerminalLevel] = useState(0); // 0=basic, 1=elite, 2=final
   const [currentWorld, setCurrentWorld] = useState('woods'); // 'woods' or 'tundra'
+  const [shopDiscovered, setShopDiscovered] = useState(false);
+  const [equippedGear, setEquippedGear] = useState({
+    weapon: null,
+    armor: null,
+    accessory: null
+  });
   const logEndRef = useRef(null);
   const terminalEndRef = useRef(null);
   const inputRef = useRef(null);
 
   const characterClasses = [
-    { name: 'Warrior', hp: 120, attack: 15, defense: 8, description: 'Strong and resilient, excels in close combat' },
-    { name: 'Ranger', hp: 100, attack: 18, defense: 5, description: 'Swift and deadly, strikes from the shadows' },
-    { name: 'Mage', hp: 80, attack: 25, defense: 3, description: 'Wields powerful magic but fragile in defense' }
+    { 
+      name: 'Warrior', 
+      hp: 120, 
+      attack: 15, 
+      defense: 8, 
+      description: 'Strong and resilient, excels in close combat',
+      startingGear: {
+        weapon: 'basic_sword',
+        armor: 'basic_chainmail',
+        accessory: null
+      }
+    },
+    { 
+      name: 'Ranger', 
+      hp: 100, 
+      attack: 18, 
+      defense: 5, 
+      description: 'Swift and deadly, strikes from the shadows',
+      startingGear: {
+        weapon: 'basic_bow',
+        armor: 'basic_leather',
+        accessory: null
+      }
+    },
+    { 
+      name: 'Mage', 
+      hp: 80, 
+      attack: 25, 
+      defense: 3, 
+      description: 'Wields powerful magic but fragile in defense',
+      startingGear: {
+        weapon: 'basic_staff',
+        armor: 'basic_robes',
+        accessory: null
+      }
+    }
   ];
+
+  const shopItems = {
+    // Basic starting gear (cannot be sold or stolen)
+    basic_sword: { 
+      name: 'Rusty Sword', 
+      type: 'weapon', 
+      cost: 0, 
+      sellValue: 0,
+      attack: 3, 
+      description: 'Your trusty starter weapon',
+      canSteal: false,
+      canSell: false
+    },
+    basic_bow: { 
+      name: 'Wooden Bow', 
+      type: 'weapon', 
+      cost: 0, 
+      sellValue: 0,
+      attack: 4, 
+      description: 'A simple hunting bow',
+      canSteal: false,
+      canSell: false
+    },
+    basic_staff: { 
+      name: 'Worn Staff', 
+      type: 'weapon', 
+      cost: 0, 
+      sellValue: 0,
+      attack: 5, 
+      description: 'A weathered magical staff',
+      canSteal: false,
+      canSell: false
+    },
+    basic_leather: { 
+      name: 'Worn Leather', 
+      type: 'armor', 
+      cost: 0, 
+      sellValue: 0,
+      defense: 2, 
+      description: 'Basic leather protection',
+      canSteal: false,
+      canSell: false
+    },
+    basic_chainmail: { 
+      name: 'Old Chainmail', 
+      type: 'armor', 
+      cost: 0, 
+      sellValue: 0,
+      defense: 3, 
+      description: 'Dented but functional',
+      canSteal: false,
+      canSell: false
+    },
+    basic_robes: { 
+      name: 'Tattered Robes', 
+      type: 'armor', 
+      cost: 0, 
+      sellValue: 0,
+      defense: 1, 
+      description: 'Magical but worn',
+      canSteal: false,
+      canSell: false
+    },
+    // Found loot (can be sold and stolen)
+    found_dagger: { 
+      name: 'Found Dagger', 
+      type: 'weapon', 
+      cost: 0, 
+      sellValue: 30,
+      attack: 6, 
+      description: 'A sharp blade, abandoned',
+      canSteal: true,
+      canSell: true,
+      lootOnly: true
+    },
+    found_mace: { 
+      name: 'Found Mace', 
+      type: 'weapon', 
+      cost: 0, 
+      sellValue: 40,
+      attack: 8, 
+      description: 'A heavy iron mace',
+      canSteal: true,
+      canSell: true,
+      lootOnly: true
+    },
+    found_armor: { 
+      name: 'Found Armor', 
+      type: 'armor', 
+      cost: 0, 
+      sellValue: 40,
+      defense: 4, 
+      description: 'Scavenged protective gear',
+      canSteal: true,
+      canSell: true,
+      lootOnly: true
+    },
+    found_shield: { 
+      name: 'Found Shield', 
+      type: 'armor', 
+      cost: 0, 
+      sellValue: 50,
+      defense: 5, 
+      description: 'A sturdy wooden shield',
+      canSteal: true,
+      canSell: true,
+      lootOnly: true
+    },
+    found_charm: { 
+      name: 'Found Charm', 
+      type: 'accessory', 
+      cost: 0, 
+      sellValue: 60,
+      attack: 4,
+      defense: 2,
+      description: 'A mysterious trinket',
+      canSteal: true,
+      canSell: true,
+      lootOnly: true
+    },
+    // Shop items (can be sold but not stolen - you paid good XP!)
+    iron_sword: { 
+      name: 'Iron Sword', 
+      type: 'weapon', 
+      cost: 50, 
+      sellValue: 25,
+      attack: 5, 
+      description: 'A sturdy iron blade',
+      canSteal: false,
+      canSell: true
+    },
+    steel_axe: { 
+      name: 'Steel Axe', 
+      type: 'weapon', 
+      cost: 150, 
+      sellValue: 75,
+      attack: 10, 
+      description: 'A powerful two-handed axe',
+      canSteal: false,
+      canSell: true
+    },
+    enchanted_staff: { 
+      name: 'Enchanted Staff', 
+      type: 'weapon', 
+      cost: 200, 
+      sellValue: 100,
+      attack: 15, 
+      description: 'Crackles with magical energy',
+      canSteal: false,
+      canSell: true
+    },
+    dragon_slayer: { 
+      name: 'Dragon Slayer', 
+      type: 'weapon', 
+      cost: 400, 
+      sellValue: 200,
+      attack: 25, 
+      description: 'Forged from dragon scales',
+      canSteal: false,
+      canSell: true
+    },
+    leather_armor: { 
+      name: 'Leather Armor', 
+      type: 'armor', 
+      cost: 50, 
+      sellValue: 25,
+      defense: 3, 
+      description: 'Light but protective',
+      canSteal: false,
+      canSell: true
+    },
+    chainmail: { 
+      name: 'Chainmail', 
+      type: 'armor', 
+      cost: 150, 
+      sellValue: 75,
+      defense: 6, 
+      description: 'Interlocking metal rings',
+      canSteal: false,
+      canSell: true
+    },
+    plate_armor: { 
+      name: 'Plate Armor', 
+      type: 'armor', 
+      cost: 250, 
+      sellValue: 125,
+      defense: 10, 
+      description: 'Heavy steel plating',
+      canSteal: false,
+      canSell: true
+    },
+    dragon_scales: { 
+      name: 'Dragon Scale Mail', 
+      type: 'armor', 
+      cost: 500, 
+      sellValue: 250,
+      defense: 15, 
+      description: 'Impenetrable scales',
+      canSteal: false,
+      canSell: true
+    },
+    health_ring: { 
+      name: 'Ring of Vitality', 
+      type: 'accessory', 
+      cost: 100, 
+      sellValue: 50,
+      maxHp: 30, 
+      description: 'Increases maximum health',
+      canSteal: false,
+      canSell: true
+    },
+    power_amulet: { 
+      name: 'Amulet of Power', 
+      type: 'accessory', 
+      cost: 200, 
+      sellValue: 100,
+      attack: 8, 
+      defense: 4, 
+      description: 'Boosts attack and defense',
+      canSteal: false,
+      canSell: true
+    },
+    berserker_charm: { 
+      name: 'Berserker Charm', 
+      type: 'accessory', 
+      cost: 300, 
+      sellValue: 150,
+      attack: 15, 
+      defense: -5, 
+      description: 'Great power, but fragile',
+      canSteal: false,
+      canSell: true
+    },
+    guardian_talisman: { 
+      name: 'Guardian Talisman', 
+      type: 'accessory', 
+      cost: 300, 
+      sellValue: 150,
+      defense: 12, 
+      attack: -5, 
+      description: 'Excellent protection',
+      canSteal: false,
+      canSell: true
+    }
+  };
 
   const enemies = {
     goblin: { name: 'Goblin', hp: 30, attack: 8, xp: 15, description: 'A small, green creature with sharp teeth' },
@@ -322,6 +606,8 @@ The frozen wastes await you, ${player?.name}.
         setGameLog(state.gameLog || []);
         setCurrentWorld(state.currentWorld || 'woods');
         setTerminalLevel(state.terminalLevel || 0);
+        setShopDiscovered(state.shopDiscovered || false);
+        setEquippedGear(state.equippedGear || { weapon: null, armor: null, accessory: null });
         setGameState('playing');
       } else {
         setGameState('character-select');
@@ -339,8 +625,187 @@ The frozen wastes await you, ${player?.name}.
     }
   };
 
+  const saveCurrentState = () => {
+    saveGame({
+      player,
+      location,
+      hp,
+      maxHp,
+      level,
+      xp,
+      inventory,
+      gameLog,
+      currentWorld,
+      terminalLevel,
+      shopDiscovered,
+      equippedGear
+    });
+  };
+
   const addLog = (message, type = 'info') => {
     setGameLog(prev => [...prev, { message, type, timestamp: Date.now() }]);
+  };
+
+  const getEffectiveStats = () => {
+    let totalAttack = player?.attack || 0;
+    let totalDefense = player?.defense || 0;
+    let totalMaxHp = maxHp;
+
+    if (equippedGear.weapon) {
+      const weapon = shopItems[equippedGear.weapon];
+      totalAttack += weapon.attack || 0;
+    }
+    if (equippedGear.armor) {
+      const armor = shopItems[equippedGear.armor];
+      totalDefense += armor.defense || 0;
+    }
+    if (equippedGear.accessory) {
+      const accessory = shopItems[equippedGear.accessory];
+      totalAttack += accessory.attack || 0;
+      totalDefense += accessory.defense || 0;
+      totalMaxHp += accessory.maxHp || 0;
+    }
+
+    return { attack: totalAttack, defense: totalDefense, maxHp: totalMaxHp };
+  };
+
+  const buyItem = (itemKey) => {
+    const item = shopItems[itemKey];
+    if (!item) {
+      addLog('Item not found.', 'system');
+      return;
+    }
+
+    if (xp < item.cost) {
+      addLog(`Not enough XP! Need ${item.cost}, have ${xp}.`, 'system');
+      return;
+    }
+
+    // Check if already equipped in this slot
+    if (equippedGear[item.type]) {
+      addLog(`You already have ${shopItems[equippedGear[item.type]].name} equipped. Unequip first!`, 'system');
+      return;
+    }
+
+    const newXp = xp - item.cost;
+    setXp(newXp);
+    
+    const newGear = { ...equippedGear, [item.type]: itemKey };
+    setEquippedGear(newGear);
+
+    // If accessory with maxHp, increase current and max HP
+    if (item.type === 'accessory' && item.maxHp) {
+      const newMaxHp = maxHp + item.maxHp;
+      setMaxHp(newMaxHp);
+      setHp(prev => prev + item.maxHp); // Also heal by the bonus amount
+    }
+
+    addLog(`Purchased and equipped ${item.name}!`, 'victory');
+    
+    saveGame({
+      player,
+      location,
+      hp,
+      maxHp,
+      level,
+      xp: newXp,
+      inventory,
+      gameLog,
+      currentWorld,
+      terminalLevel,
+      shopDiscovered,
+      equippedGear: newGear
+    });
+  };
+
+  const sellItem = (slot) => {
+    if (!equippedGear[slot]) {
+      addLog(`No ${slot} equipped to sell.`, 'system');
+      return;
+    }
+
+    const itemKey = equippedGear[slot];
+    const item = shopItems[itemKey];
+    
+    if (!item.canSell) {
+      addLog(`${item.name} cannot be sold.`, 'system');
+      return;
+    }
+
+    // Unequip first
+    if (item.type === 'accessory' && item.maxHp) {
+      const newMaxHp = maxHp - item.maxHp;
+      setMaxHp(newMaxHp);
+      setHp(prev => Math.min(prev, newMaxHp));
+    }
+
+    const newGear = { ...equippedGear, [slot]: null };
+    setEquippedGear(newGear);
+    
+    const newXp = xp + item.sellValue;
+    setXp(newXp);
+    
+    addLog(`Sold ${item.name} for ${item.sellValue} XP!`, 'victory');
+
+    saveGame({
+      player,
+      location,
+      hp,
+      maxHp,
+      level,
+      xp: newXp,
+      inventory,
+      gameLog,
+      currentWorld,
+      terminalLevel,
+      shopDiscovered,
+      equippedGear: newGear
+    });
+  };
+
+  const unequipItem = (slot) => {
+    if (!equippedGear[slot]) {
+      addLog(`No ${slot} equipped.`, 'system');
+      return;
+    }
+
+    const item = shopItems[equippedGear[slot]];
+    
+    // If unequipping accessory with maxHp bonus
+    if (item.type === 'accessory' && item.maxHp) {
+      const newMaxHp = maxHp - item.maxHp;
+      setMaxHp(newMaxHp);
+      setHp(prev => Math.min(prev, newMaxHp)); // Cap HP to new max
+    }
+
+    const newGear = { ...equippedGear, [slot]: null };
+    setEquippedGear(newGear);
+    addLog(`Unequipped ${item.name}.`, 'system');
+
+    saveGame({
+      player,
+      location,
+      hp,
+      maxHp,
+      level,
+      xp,
+      inventory,
+      gameLog,
+      currentWorld,
+      terminalLevel,
+      shopDiscovered,
+      equippedGear: newGear
+    });
+  };
+
+  const discoverShop = () => {
+    if (shopDiscovered) {
+      addLog('You return to the merchant\'s hidden camp.', 'system');
+    } else {
+      setShopDiscovered(true);
+      addLog('You discover a hidden merchant camp! A mysterious trader offers rare equipment for XP.', 'victory');
+      addLog('Use the Shop button to browse items. Gear can be equipped or unequipped.', 'system');
+    }
   };
 
   const selectCharacter = (charClass) => {
@@ -354,6 +819,7 @@ The frozen wastes await you, ${player?.name}.
     setMaxHp(charClass.hp);
     setHp(charClass.hp);
     setLocation('start');
+    setEquippedGear(charClass.startingGear);
     setGameState('playing');
     addLog(`Welcome, ${newPlayer.name}! Your journey begins...`, 'system');
     addLog(locations.start.description, 'location');
@@ -366,7 +832,11 @@ The frozen wastes await you, ${player?.name}.
       level: 1,
       xp: 0,
       inventory: [],
-      gameLog: []
+      gameLog: [],
+      currentWorld: 'woods',
+      terminalLevel: 0,
+      shopDiscovered: false,
+      equippedGear: charClass.startingGear
     });
   };
 
@@ -381,8 +851,9 @@ The frozen wastes await you, ${player?.name}.
   const attack = () => {
     if (!currentEnemy || hp <= 0) return;
 
-    const playerDamage = Math.max(1, player.attack + Math.floor(Math.random() * 10) - 5);
-    const enemyDamage = Math.max(0, currentEnemy.attack - player.defense + Math.floor(Math.random() * 8) - 4);
+    const stats = getEffectiveStats();
+    const playerDamage = Math.max(1, stats.attack + Math.floor(Math.random() * 10) - 5);
+    const enemyDamage = Math.max(0, currentEnemy.attack - stats.defense + Math.floor(Math.random() * 8) - 4);
 
     const newEnemyHp = currentEnemy.currentHp - playerDamage;
     addLog(`You attack the ${currentEnemy.name} for ${playerDamage} damage!`, 'combat');
@@ -429,16 +900,7 @@ The frozen wastes await you, ${player?.name}.
         return;
       }
       
-      saveGame({
-        player,
-        location,
-        hp,
-        maxHp,
-        level: newLevel,
-        xp: newXp,
-        inventory,
-        gameLog
-      });
+      saveCurrentState();
     } else {
       setCurrentEnemy({ ...currentEnemy, currentHp: newEnemyHp });
       addLog(`The ${currentEnemy.name} strikes back for ${enemyDamage} damage!`, 'combat');
@@ -508,16 +970,7 @@ The frozen wastes await you, ${player?.name}.
         setTimeout(encounterEnemy, 1000);
       }
       
-      saveGame({
-        player,
-        location: direction,
-        hp,
-        maxHp,
-        level,
-        xp,
-        inventory,
-        gameLog
-      });
+      saveCurrentState();
     } else {
       addLog('You cannot go that way.', 'system');
     }
@@ -534,9 +987,88 @@ The frozen wastes await you, ${player?.name}.
     setHp(newHp);
     addLog(`You rest and recover ${newHp - hp} HP.`, 'system');
     
+    // Check for thief stealing found gear (30% chance)
+    let stolenItem = null;
+    if (Math.random() < 0.3) {
+      // Try to steal weapon, armor, or accessory (in that priority)
+      const slots = ['weapon', 'armor', 'accessory'];
+      for (const slot of slots) {
+        if (equippedGear[slot]) {
+          const item = shopItems[equippedGear[slot]];
+          if (item.canSteal) {
+            stolenItem = { slot, item };
+            break;
+          }
+        }
+      }
+      
+      if (stolenItem) {
+        // Handle stat changes from losing gear
+        if (stolenItem.item.type === 'accessory' && stolenItem.item.maxHp) {
+          const newMaxHp = maxHp - stolenItem.item.maxHp;
+          setMaxHp(newMaxHp);
+          setHp(prev => Math.min(prev, newMaxHp));
+        }
+        
+        const newGear = { ...equippedGear, [stolenItem.slot]: null };
+        setEquippedGear(newGear);
+        
+        addLog(`A thief strikes! Your ${stolenItem.item.name} has been stolen!`, 'death');
+      }
+    }
+    
+    // Random enemy encounter (50% chance)
     if (Math.random() > 0.5) {
       addLog('But the noise attracted something...', 'system');
       setTimeout(encounterEnemy, 1000);
+    }
+    
+    if (stolenItem) {
+      saveGame({
+        player,
+        location,
+        hp,
+        maxHp,
+        level,
+        xp,
+        inventory,
+        gameLog,
+        currentWorld,
+        terminalLevel,
+        shopDiscovered,
+        equippedGear
+      });
+    }
+  };
+
+  const findLoot = () => {
+    const lootItems = Object.keys(shopItems).filter(key => shopItems[key].lootOnly);
+    if (lootItems.length === 0) return null;
+    
+    const randomLoot = lootItems[Math.floor(Math.random() * lootItems.length)];
+    const item = shopItems[randomLoot];
+    
+    // Auto-equip if slot is empty
+    if (!equippedGear[item.type]) {
+      const newGear = { ...equippedGear, [item.type]: randomLoot };
+      setEquippedGear(newGear);
+      
+      // Handle HP bonus for accessories
+      if (item.type === 'accessory' && item.maxHp) {
+        const newMaxHp = maxHp + item.maxHp;
+        setMaxHp(newMaxHp);
+        setHp(prev => prev + item.maxHp);
+      }
+      
+      addLog(`You found ${item.name} and equipped it!`, 'victory');
+      addLog(`It can be sold at the shop for ${item.sellValue} XP.`, 'system');
+      
+      saveCurrentState();
+      return true;
+    } else {
+      addLog(`You found ${item.name}!`, 'victory');
+      addLog(`Your ${item.type} slot is full. Unequip at shop to pick this up.`, 'system');
+      return false;
     }
   };
 
@@ -546,8 +1078,8 @@ The frozen wastes await you, ${player?.name}.
     setLocation('tundra_start');
     setGameState('playing');
     setGameLog([]);
-    // Keep player stats but reset HP
-    setHp(maxHp);
+    // Keep player stats, gear, and shop discovery
+    setHp(getEffectiveStats().maxHp); // Heal to full with gear bonuses
     addLog(`The air grows cold. You step into the frozen wastes...`, 'system');
     addLog(locations.tundra_start.description, 'location');
     addLog(`Your trials in the woods have made you stronger. But here, death is certain.`, 'system');
@@ -555,14 +1087,16 @@ The frozen wastes await you, ${player?.name}.
     saveGame({
       player,
       location: 'tundra_start',
-      hp: maxHp,
+      hp: getEffectiveStats().maxHp,
       maxHp,
       level,
       xp,
       inventory,
       gameLog: [],
       currentWorld: 'tundra',
-      terminalLevel: 1
+      terminalLevel: 1,
+      shopDiscovered,
+      equippedGear
     });
   };
 
@@ -773,15 +1307,20 @@ The frozen wastes await you, ${player?.name}.
               <div>Class: {player?.class}</div>
               <div>Level: {level}</div>
               <div>XP: {xp} / {level * 100}</div>
+              <div className="pt-2 border-t border-gray-700">
+                <div className="text-yellow-400 text-xs mb-1">Stats (with gear):</div>
+                <div>Attack: {getEffectiveStats().attack} {equippedGear.weapon && `(+${shopItems[equippedGear.weapon].attack})`}</div>
+                <div>Defense: {getEffectiveStats().defense} {equippedGear.armor && `(+${shopItems[equippedGear.armor].defense})`}</div>
+              </div>
               <div className="pt-2">
                 <div className="flex justify-between mb-1">
                   <span>HP:</span>
-                  <span>{hp} / {maxHp}</span>
+                  <span>{hp} / {getEffectiveStats().maxHp}</span>
                 </div>
                 <div className="w-full bg-gray-700 h-4 rounded">
                   <div 
                     className="bg-green-600 h-4 rounded transition-all"
-                    style={{ width: `${(hp / maxHp) * 100}%` }}
+                    style={{ width: `${(hp / getEffectiveStats().maxHp) * 100}%` }}
                   />
                 </div>
               </div>
@@ -869,7 +1408,20 @@ The frozen wastes await you, ${player?.name}.
                 Rest
               </button>
               <button
-                onClick={encounterEnemy}
+                onClick={() => {
+                  // 40% chance to discover shop if not found
+                  if (!shopDiscovered && Math.random() > 0.6) {
+                    discoverShop();
+                  } 
+                  // 20% chance to find loot
+                  else if (Math.random() < 0.2) {
+                    findLoot();
+                  }
+                  // Otherwise encounter enemy
+                  else {
+                    encounterEnemy();
+                  }
+                }}
                 disabled={currentEnemy || hp <= 0}
                 className="bg-purple-900 hover:bg-purple-800 disabled:bg-gray-700 disabled:text-gray-500 border border-purple-600 disabled:border-gray-600 px-4 py-2 rounded font-mono transition-all"
               >
@@ -897,6 +1449,137 @@ The frozen wastes await you, ${player?.name}.
             </div>
           </div>
         </div>
+
+        {shopDiscovered && (
+          <div className="mt-4 bg-gray-900 border border-yellow-600 p-4 rounded">
+            <h3 className="text-lg font-bold mb-3 font-mono text-yellow-400">🛒 Merchant Shop</h3>
+            
+            {/* Equipped Gear */}
+            <div className="mb-4 p-3 bg-gray-800 rounded">
+              <div className="text-sm font-mono text-green-400 mb-2">Currently Equipped:</div>
+              <div className="grid grid-cols-3 gap-2 text-xs font-mono">
+                <div>
+                  <span className="text-gray-400">Weapon:</span>
+                  <div className="text-yellow-300">
+                    {equippedGear.weapon ? shopItems[equippedGear.weapon].name : 'None'}
+                  </div>
+                  {equippedGear.weapon && (
+                    <div className="flex gap-2 mt-1">
+                      <button 
+                        onClick={() => unequipItem('weapon')}
+                        className="text-blue-400 hover:text-blue-300 text-xs"
+                      >
+                        [Unequip]
+                      </button>
+                      {shopItems[equippedGear.weapon].canSell && (
+                        <button 
+                          onClick={() => sellItem('weapon')}
+                          className="text-yellow-400 hover:text-yellow-300 text-xs"
+                        >
+                          [Sell {shopItems[equippedGear.weapon].sellValue}XP]
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <span className="text-gray-400">Armor:</span>
+                  <div className="text-yellow-300">
+                    {equippedGear.armor ? shopItems[equippedGear.armor].name : 'None'}
+                  </div>
+                  {equippedGear.armor && (
+                    <div className="flex gap-2 mt-1">
+                      <button 
+                        onClick={() => unequipItem('armor')}
+                        className="text-blue-400 hover:text-blue-300 text-xs"
+                      >
+                        [Unequip]
+                      </button>
+                      {shopItems[equippedGear.armor].canSell && (
+                        <button 
+                          onClick={() => sellItem('armor')}
+                          className="text-yellow-400 hover:text-yellow-300 text-xs"
+                        >
+                          [Sell {shopItems[equippedGear.armor].sellValue}XP]
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <span className="text-gray-400">Accessory:</span>
+                  <div className="text-yellow-300">
+                    {equippedGear.accessory ? shopItems[equippedGear.accessory].name : 'None'}
+                  </div>
+                  {equippedGear.accessory && (
+                    <div className="flex gap-2 mt-1">
+                      <button 
+                        onClick={() => unequipItem('accessory')}
+                        className="text-blue-400 hover:text-blue-300 text-xs"
+                      >
+                        [Unequip]
+                      </button>
+                      {shopItems[equippedGear.accessory].canSell && (
+                        <button 
+                          onClick={() => sellItem('accessory')}
+                          className="text-yellow-400 hover:text-yellow-300 text-xs"
+                        >
+                          [Sell {shopItems[equippedGear.accessory].sellValue}XP]
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Shop Items */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {Object.entries(shopItems)
+                .filter(([key, item]) => !item.lootOnly && item.cost > 0) // Only show purchasable items
+                .map(([key, item]) => {
+                const isEquipped = equippedGear[item.type] === key;
+                const canAfford = xp >= item.cost;
+                const slotOccupied = equippedGear[item.type] && !isEquipped;
+                
+                return (
+                  <div 
+                    key={key} 
+                    className={`p-3 rounded border ${
+                      isEquipped 
+                        ? 'bg-green-900 border-green-500' 
+                        : 'bg-gray-800 border-gray-600'
+                    }`}
+                  >
+                    <div className="font-bold text-yellow-400 text-sm">{item.name}</div>
+                    <div className="text-xs text-gray-400 mb-2">{item.description}</div>
+                    <div className="text-xs font-mono space-y-1">
+                      {item.attack && <div className="text-red-400">+{item.attack} Attack</div>}
+                      {item.defense && <div className="text-blue-400">+{item.defense} Defense</div>}
+                      {item.maxHp && <div className="text-green-400">+{item.maxHp} Max HP</div>}
+                      <div className="text-yellow-300">Cost: {item.cost} XP</div>
+                    </div>
+                    {isEquipped ? (
+                      <div className="mt-2 text-xs text-green-400">✓ Equipped</div>
+                    ) : (
+                      <button
+                        onClick={() => buyItem(key)}
+                        disabled={!canAfford || slotOccupied || hp <= 0}
+                        className={`mt-2 w-full px-2 py-1 text-xs rounded font-mono ${
+                          canAfford && !slotOccupied
+                            ? 'bg-yellow-700 hover:bg-yellow-600 text-white'
+                            : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                        }`}
+                      >
+                        {slotOccupied ? 'Unequip first' : canAfford ? 'Buy & Equip' : 'Not enough XP'}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

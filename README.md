@@ -5,10 +5,13 @@ A browser-based MUD (Multi-User Dungeon) game with three-tier progression and mu
 ## Features
 - **Two distinct worlds**: Dark Woods and Frozen Wastes
 - **Three terminal access levels**: Basic, Elite, and Omega
+- **Shop system**: Discover a merchant and buy gear with XP
+- **Equipment system**: 12 items across 3 slots (weapon, armor, accessory)
 - **Multiple endings** based on your performance
 - Choose from 3 character classes
 - Progressive difficulty with 10 unique enemy types
 - Level progression and combat system
+- Stats boosted by equipment
 - Auto-save functionality using browser storage
 - Philosophical meta-narrative about mortality and persistence
 - Fully client-side (no backend required)
