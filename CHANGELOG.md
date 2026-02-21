@@ -1,6 +1,27 @@
 # Changelog
 
-## v6.0 - Loot & Risk System (Current)
+## v6.1 - UX Improvements (Current)
+**Date:** 2025-02-19
+
+### UX Improvements:
+- 📜 **Auto-scroll to top** after all actions (attack, flee, rest, search, move, shop)
+- Keeps character info, location, and status visible
+- Smooth scroll animation
+- Better gameplay flow, especially with large shop panels
+
+### Why This Matters:
+- Shop panel is tall and pushes important info off-screen
+- Players need to see HP, enemy status, and combat log
+- Manual scrolling after every action is tedious
+- Improves mobile experience significantly
+
+### Files Changed:
+- `src/mud-terminal.jsx` - Added gameTopRef and scrollToTop() function
+- `CHANGELOG.md` - This file
+
+---
+
+## v6.0 - Loot & Risk System
 **Date:** 2025-02-19
 
 ### Major Features:

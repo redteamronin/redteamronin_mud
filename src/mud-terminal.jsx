@@ -26,6 +26,7 @@ const MUDTerminal = () => {
   const logEndRef = useRef(null);
   const terminalEndRef = useRef(null);
   const inputRef = useRef(null);
+  const gameTopRef = useRef(null);
 
   const characterClasses = [
     { 
@@ -646,6 +647,10 @@ The frozen wastes await you, ${player?.name}.
     setGameLog(prev => [...prev, { message, type, timestamp: Date.now() }]);
   };
 
+  const scrollToTop = () => {
+    gameTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   const getEffectiveStats = () => {
     let totalAttack = player?.attack || 0;
     let totalDefense = player?.defense || 0;
@@ -670,6 +675,7 @@ The frozen wastes await you, ${player?.name}.
   };
 
   const buyItem = (itemKey) => {
+    scrollToTop();
     const item = shopItems[itemKey];
     if (!item) {
       addLog('Item not found.', 'system');
@@ -719,6 +725,7 @@ The frozen wastes await you, ${player?.name}.
   };
 
   const sellItem = (slot) => {
+    scrollToTop();
     if (!equippedGear[slot]) {
       addLog(`No ${slot} equipped to sell.`, 'system');
       return;
@@ -764,6 +771,7 @@ The frozen wastes await you, ${player?.name}.
   };
 
   const unequipItem = (slot) => {
+    scrollToTop();
     if (!equippedGear[slot]) {
       addLog(`No ${slot} equipped.`, 'system');
       return;
@@ -799,6 +807,7 @@ The frozen wastes await you, ${player?.name}.
   };
 
   const discoverShop = () => {
+    scrollToTop();
     if (shopDiscovered) {
       addLog('You return to the merchant\'s hidden camp.', 'system');
     } else {
@@ -841,6 +850,7 @@ The frozen wastes await you, ${player?.name}.
   };
 
   const encounterEnemy = () => {
+    scrollToTop();
     const currentLoc = locations[location];
     const enemyType = currentLoc.encounters[Math.floor(Math.random() * currentLoc.encounters.length)];
     const enemy = { ...enemies[enemyType], currentHp: enemies[enemyType].hp };
@@ -857,6 +867,7 @@ The frozen wastes await you, ${player?.name}.
 
     const newEnemyHp = currentEnemy.currentHp - playerDamage;
     addLog(`You attack the ${currentEnemy.name} for ${playerDamage} damage!`, 'combat');
+    scrollToTop();
 
     if (newEnemyHp <= 0) {
       addLog(`You defeated the ${currentEnemy.name}! Gained ${currentEnemy.xp} XP.`, 'victory');
@@ -928,6 +939,8 @@ The frozen wastes await you, ${player?.name}.
   const flee = () => {
     if (!currentEnemy || hp <= 0) return;
     
+    scrollToTop();
+    
     if (Math.random() > 0.5) {
       addLog('You successfully fled from combat!', 'system');
       setCurrentEnemy(null);
@@ -960,6 +973,8 @@ The frozen wastes await you, ${player?.name}.
       return;
     }
 
+    scrollToTop();
+
     const currentLoc = locations[location];
     if (currentLoc.next.includes(direction)) {
       setLocation(direction);
@@ -981,6 +996,8 @@ The frozen wastes await you, ${player?.name}.
       addLog('You cannot rest while in combat!', 'system');
       return;
     }
+
+    scrollToTop();
 
     const healAmount = Math.floor(maxHp * 0.3);
     const newHp = Math.min(maxHp, hp + healAmount);
@@ -1042,6 +1059,7 @@ The frozen wastes await you, ${player?.name}.
   };
 
   const findLoot = () => {
+    scrollToTop();
     const lootItems = Object.keys(shopItems).filter(key => shopItems[key].lootOnly);
     if (lootItems.length === 0) return null;
     
@@ -1300,6 +1318,7 @@ The frozen wastes await you, ${player?.name}.
   return (
     <div className={`min-h-screen ${currentWorld === 'tundra' ? 'bg-gradient-to-b from-blue-950 via-slate-900 to-black' : 'bg-gradient-to-b from-gray-900 via-gray-800 to-black'} text-green-400 p-4`}>
       <div className="max-w-6xl mx-auto">
+        <div ref={gameTopRef}></div>
         <div className="grid md:grid-cols-3 gap-4 mb-4">
           <div className="bg-gray-900 border border-green-600 p-4 rounded">
             <h3 className="text-lg font-bold mb-2 font-mono">{player?.name}</h3>
