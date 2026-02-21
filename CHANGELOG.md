@@ -1,6 +1,36 @@
 # Changelog
 
-## v6.1 - UX Improvements (Current)
+## v6.2 - Collapsible Shop (Current)
+**Date:** 2025-02-19
+
+### Major UX Improvement:
+- 🎯 **Collapsible Shop Panel** - Click to expand/collapse
+- Shop now starts collapsed by default
+- Auto-collapses when any action is taken
+- Prevents shop from blocking important game info
+- Much better mobile experience
+
+### How It Works:
+- Shop header is always visible when discovered
+- Click header to toggle shop inventory open/closed
+- Arrow indicator shows state (▶ collapsed, ▼ expanded)
+- Any action (attack, search, move, etc.) auto-collapses shop
+- Keeps character stats, location, and combat visible
+
+### Why This Matters:
+- Shop with 12 items is ~1500px tall
+- Was blocking character HP, enemy status, combat log
+- Players couldn't see if they were dying
+- Mobile users had to scroll constantly
+- Now: Shop is there when you need it, hidden when you don't
+
+### Files Changed:
+- `src/mud-terminal.jsx` - Added shopVisible state, collapsible UI, auto-collapse
+- `CHANGELOG.md` - This file
+
+---
+
+## v6.1 - UX Improvements
 **Date:** 2025-02-19
 
 ### UX Improvements:

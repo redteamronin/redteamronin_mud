@@ -18,6 +18,7 @@ const MUDTerminal = () => {
   const [terminalLevel, setTerminalLevel] = useState(0); // 0=basic, 1=elite, 2=final
   const [currentWorld, setCurrentWorld] = useState('woods'); // 'woods' or 'tundra'
   const [shopDiscovered, setShopDiscovered] = useState(false);
+  const [shopVisible, setShopVisible] = useState(false);
   const [equippedGear, setEquippedGear] = useState({
     weapon: null,
     armor: null,
@@ -464,7 +465,9 @@ it was all part of the test.
 
 Thank you for playing.
 
-- The Architect`;
+- The Architect
+
+P.S. Can you beat the dragon? Perhaps...`;
         } else if (file === 'victory.txt') {
           if (terminalLevel >= 1) {
             return `CLASSIFIED DOCUMENT - LEVEL 5 CLEARANCE
@@ -648,7 +651,13 @@ The frozen wastes await you, ${player?.name}.
   };
 
   const scrollToTop = () => {
+    // Collapse shop when doing shop transactions
+    // This ensures you see the result of buy/sell/unequip in the log
+    setShopVisible(false);
+    // Scroll to show the stat panels at the top
     gameTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Also scroll window to top for mobile
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const getEffectiveStats = () => {
@@ -807,7 +816,6 @@ The frozen wastes await you, ${player?.name}.
   };
 
   const discoverShop = () => {
-    scrollToTop();
     if (shopDiscovered) {
       addLog('You return to the merchant\'s hidden camp.', 'system');
     } else {
@@ -850,7 +858,6 @@ The frozen wastes await you, ${player?.name}.
   };
 
   const encounterEnemy = () => {
-    scrollToTop();
     const currentLoc = locations[location];
     const enemyType = currentLoc.encounters[Math.floor(Math.random() * currentLoc.encounters.length)];
     const enemy = { ...enemies[enemyType], currentHp: enemies[enemyType].hp };
@@ -867,7 +874,6 @@ The frozen wastes await you, ${player?.name}.
 
     const newEnemyHp = currentEnemy.currentHp - playerDamage;
     addLog(`You attack the ${currentEnemy.name} for ${playerDamage} damage!`, 'combat');
-    scrollToTop();
 
     if (newEnemyHp <= 0) {
       addLog(`You defeated the ${currentEnemy.name}! Gained ${currentEnemy.xp} XP.`, 'victory');
@@ -939,8 +945,6 @@ The frozen wastes await you, ${player?.name}.
   const flee = () => {
     if (!currentEnemy || hp <= 0) return;
     
-    scrollToTop();
-    
     if (Math.random() > 0.5) {
       addLog('You successfully fled from combat!', 'system');
       setCurrentEnemy(null);
@@ -973,8 +977,6 @@ The frozen wastes await you, ${player?.name}.
       return;
     }
 
-    scrollToTop();
-
     const currentLoc = locations[location];
     if (currentLoc.next.includes(direction)) {
       setLocation(direction);
@@ -996,8 +998,6 @@ The frozen wastes await you, ${player?.name}.
       addLog('You cannot rest while in combat!', 'system');
       return;
     }
-
-    scrollToTop();
 
     const healAmount = Math.floor(maxHp * 0.3);
     const newHp = Math.min(maxHp, hp + healAmount);
@@ -1059,7 +1059,6 @@ The frozen wastes await you, ${player?.name}.
   };
 
   const findLoot = () => {
-    scrollToTop();
     const lootItems = Object.keys(shopItems).filter(key => shopItems[key].lootOnly);
     if (lootItems.length === 0) return null;
     
@@ -1318,8 +1317,7 @@ The frozen wastes await you, ${player?.name}.
   return (
     <div className={`min-h-screen ${currentWorld === 'tundra' ? 'bg-gradient-to-b from-blue-950 via-slate-900 to-black' : 'bg-gradient-to-b from-gray-900 via-gray-800 to-black'} text-green-400 p-4`}>
       <div className="max-w-6xl mx-auto">
-        <div ref={gameTopRef}></div>
-        <div className="grid md:grid-cols-3 gap-4 mb-4">
+        <div ref={gameTopRef} className="grid md:grid-cols-3 gap-4 mb-4">
           <div className="bg-gray-900 border border-green-600 p-4 rounded">
             <h3 className="text-lg font-bold mb-2 font-mono">{player?.name}</h3>
             <div className="space-y-2 text-sm font-mono">
@@ -1470,13 +1468,21 @@ The frozen wastes await you, ${player?.name}.
         </div>
 
         {shopDiscovered && (
-          <div className="mt-4 bg-gray-900 border border-yellow-600 p-4 rounded">
-            <h3 className="text-lg font-bold mb-3 font-mono text-yellow-400">🛒 Merchant Shop</h3>
+          <div className="mt-4 bg-gray-900 border border-yellow-600 rounded">
+            <button 
+              onClick={() => setShopVisible(!shopVisible)}
+              className="w-full p-4 text-left hover:bg-gray-800 transition-colors flex items-center justify-between"
+            >
+              <h3 className="text-lg font-bold font-mono text-yellow-400">🛒 Merchant Shop</h3>
+              <span className="text-yellow-400 text-2xl">{shopVisible ? '▼' : '▶'}</span>
+            </button>
             
-            {/* Equipped Gear */}
-            <div className="mb-4 p-3 bg-gray-800 rounded">
-              <div className="text-sm font-mono text-green-400 mb-2">Currently Equipped:</div>
-              <div className="grid grid-cols-3 gap-2 text-xs font-mono">
+            {shopVisible && (
+              <div className="p-4 border-t border-yellow-600">
+                {/* Equipped Gear */}
+                <div className="mb-4 p-3 bg-gray-800 rounded">
+                  <div className="text-sm font-mono text-green-400 mb-2">Currently Equipped:</div>
+                  <div className="grid grid-cols-3 gap-2 text-xs font-mono">
                 <div>
                   <span className="text-gray-400">Weapon:</span>
                   <div className="text-yellow-300">
@@ -1597,6 +1603,8 @@ The frozen wastes await you, ${player?.name}.
                 );
               })}
             </div>
+              </div>
+            )}
           </div>
         )}
       </div>
