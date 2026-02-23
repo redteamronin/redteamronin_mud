@@ -19,6 +19,10 @@ const MUDTerminal = () => {
   const [currentWorld, setCurrentWorld] = useState('woods'); // 'woods' or 'tundra'
   const [shopDiscovered, setShopDiscovered] = useState(false);
   const [shopVisible, setShopVisible] = useState(false);
+  const [innDiscovered, setInnDiscovered] = useState(false);
+  const [shopDiscoveredTundra, setShopDiscoveredTundra] = useState(false);
+  const [innDiscoveredTundra, setInnDiscoveredTundra] = useState(false);
+  const [groundLoot, setGroundLoot] = useState(null); // Item waiting to be picked up
   const [equippedGear, setEquippedGear] = useState({
     weapon: null,
     armor: null,
@@ -465,9 +469,7 @@ it was all part of the test.
 
 Thank you for playing.
 
-- The Architect
-
-P.S. Can you beat the dragon? Perhaps...`;
+- The Architect`;
         } else if (file === 'victory.txt') {
           if (terminalLevel >= 1) {
             return `CLASSIFIED DOCUMENT - LEVEL 5 CLEARANCE
@@ -611,6 +613,10 @@ The frozen wastes await you, ${player?.name}.
         setCurrentWorld(state.currentWorld || 'woods');
         setTerminalLevel(state.terminalLevel || 0);
         setShopDiscovered(state.shopDiscovered || false);
+        setInnDiscovered(state.innDiscovered || false);
+        setShopDiscoveredTundra(state.shopDiscoveredTundra || false);
+        setInnDiscoveredTundra(state.innDiscoveredTundra || false);
+        setGroundLoot(state.groundLoot || null);
         setEquippedGear(state.equippedGear || { weapon: null, armor: null, accessory: null });
         setGameState('playing');
       } else {
@@ -642,12 +648,40 @@ The frozen wastes await you, ${player?.name}.
       currentWorld,
       terminalLevel,
       shopDiscovered,
+      innDiscovered,
+      shopDiscoveredTundra,
+      innDiscoveredTundra,
+      groundLoot,
       equippedGear
     });
   };
 
   const addLog = (message, type = 'info') => {
     setGameLog(prev => [...prev, { message, type, timestamp: Date.now() }]);
+  };
+
+  const isShopDiscovered = () => {
+    return currentWorld === 'woods' ? shopDiscovered : shopDiscoveredTundra;
+  };
+
+  const isInnDiscovered = () => {
+    return currentWorld === 'woods' ? innDiscovered : innDiscoveredTundra;
+  };
+
+  const setCurrentWorldShopDiscovered = (value) => {
+    if (currentWorld === 'woods') {
+      setShopDiscovered(value);
+    } else {
+      setShopDiscoveredTundra(value);
+    }
+  };
+
+  const setCurrentWorldInnDiscovered = (value) => {
+    if (currentWorld === 'woods') {
+      setInnDiscovered(value);
+    } else {
+      setInnDiscoveredTundra(value);
+    }
   };
 
   const scrollToTop = () => {
@@ -816,13 +850,48 @@ The frozen wastes await you, ${player?.name}.
   };
 
   const discoverShop = () => {
-    if (shopDiscovered) {
+    if (isShopDiscovered()) {
       addLog('You return to the merchant\'s hidden camp.', 'system');
     } else {
-      setShopDiscovered(true);
-      addLog('You discover a hidden merchant camp! A mysterious trader offers rare equipment for XP.', 'victory');
-      addLog('Use the Shop button to browse items. Gear can be equipped or unequipped.', 'system');
+      setCurrentWorldShopDiscovered(true);
+      addLog(`You discover a hidden merchant camp in the ${currentWorld === 'woods' ? 'forest' : 'tundra'}!`, 'victory');
+      addLog('A mysterious trader offers rare equipment for XP.', 'system');
     }
+  };
+
+  const discoverInn = () => {
+    if (isInnDiscovered()) {
+      addLog('You return to the cozy inn.', 'system');
+    } else {
+      setCurrentWorldInnDiscovered(true);
+      addLog(`You discover a warm inn in the ${currentWorld === 'woods' ? 'forest' : 'frozen wastes'}!`, 'victory');
+      addLog('The innkeeper offers safe rest for 20 XP.', 'system');
+    }
+  };
+
+  const restAtInn = () => {
+    const innCost = 20;
+    
+    if (xp < innCost) {
+      addLog(`Not enough XP! The inn costs ${innCost} XP.`, 'system');
+      return;
+    }
+
+    if (hp === getEffectiveStats().maxHp) {
+      addLog('You are already at full health!', 'system');
+      return;
+    }
+
+    const newXp = xp - innCost;
+    setXp(newXp);
+    
+    const effectiveMaxHp = getEffectiveStats().maxHp;
+    setHp(effectiveMaxHp);
+    
+    addLog(`You rest safely at the inn and recover to full HP.`, 'victory');
+    addLog(`Paid ${innCost} XP for lodging.`, 'system');
+    
+    saveCurrentState();
   };
 
   const selectCharacter = (charClass) => {
@@ -853,6 +922,10 @@ The frozen wastes await you, ${player?.name}.
       currentWorld: 'woods',
       terminalLevel: 0,
       shopDiscovered: false,
+      innDiscovered: false,
+      shopDiscoveredTundra: false,
+      innDiscoveredTundra: false,
+      groundLoot: null,
       equippedGear: charClass.startingGear
     });
   };
@@ -1083,10 +1156,43 @@ The frozen wastes await you, ${player?.name}.
       saveCurrentState();
       return true;
     } else {
+      // Store on ground for later pickup
+      setGroundLoot({ key: randomLoot, item });
       addLog(`You found ${item.name}!`, 'victory');
-      addLog(`Your ${item.type} slot is full. Unequip at shop to pick this up.`, 'system');
+      addLog(`Your ${item.type} slot is full. Use "Pick Up" button after unequipping.`, 'system');
       return false;
     }
+  };
+
+  const pickupGroundLoot = () => {
+    if (!groundLoot) {
+      addLog('There is nothing to pick up.', 'system');
+      return;
+    }
+
+    const { key, item } = groundLoot;
+    
+    // Check if slot is now empty
+    if (equippedGear[item.type]) {
+      addLog(`Your ${item.type} slot is still full. Unequip first!`, 'system');
+      return;
+    }
+
+    // Equip the item
+    const newGear = { ...equippedGear, [item.type]: key };
+    setEquippedGear(newGear);
+    
+    // Handle HP bonus for accessories
+    if (item.type === 'accessory' && item.maxHp) {
+      const newMaxHp = maxHp + item.maxHp;
+      setMaxHp(newMaxHp);
+      setHp(prev => prev + item.maxHp);
+    }
+    
+    setGroundLoot(null);
+    addLog(`Picked up and equipped ${item.name}!`, 'victory');
+    
+    saveCurrentState();
   };
 
   const startTundraJourney = () => {
@@ -1113,6 +1219,10 @@ The frozen wastes await you, ${player?.name}.
       currentWorld: 'tundra',
       terminalLevel: 1,
       shopDiscovered,
+      innDiscovered,
+      shopDiscoveredTundra,
+      innDiscoveredTundra,
+      groundLoot: null, // Clear ground loot when transitioning worlds
       equippedGear
     });
   };
@@ -1424,27 +1534,53 @@ The frozen wastes await you, ${player?.name}.
               >
                 Rest
               </button>
-              <button
-                onClick={() => {
-                  // 40% chance to discover shop if not found
-                  if (!shopDiscovered && Math.random() > 0.6) {
-                    discoverShop();
-                  } 
-                  // 20% chance to find loot
-                  else if (Math.random() < 0.2) {
-                    findLoot();
-                  }
-                  // Otherwise encounter enemy
-                  else {
-                    encounterEnemy();
-                  }
-                }}
-                disabled={currentEnemy || hp <= 0}
-                className="bg-purple-900 hover:bg-purple-800 disabled:bg-gray-700 disabled:text-gray-500 border border-purple-600 disabled:border-gray-600 px-4 py-2 rounded font-mono transition-all"
-              >
-                Search
-              </button>
+              {isInnDiscovered() ? (
+                <button
+                  onClick={restAtInn}
+                  disabled={currentEnemy || hp <= 0}
+                  className="bg-green-900 hover:bg-green-800 disabled:bg-gray-700 disabled:text-gray-500 border border-green-600 disabled:border-gray-600 px-4 py-2 rounded font-mono transition-all"
+                >
+                  Inn (20 XP)
+                </button>
+              ) : (
+                  Inn (20 XP)
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    // 30% chance to discover shop if not found in this world
+                    if (!isShopDiscovered() && Math.random() > 0.7) {
+                      discoverShop();
+                    }
+                    // 20% chance to discover inn if not found in this world and not in boss locations
+                    else if (!isInnDiscovered() && location !== 'lair' && location !== 'yeti_throne' && Math.random() < 0.2) {
+                      discoverInn();
+                    }
+                    // 20% chance to find loot
+                    else if (Math.random() < 0.2) {
+                      findLoot();
+                    }
+                    // Otherwise encounter enemy
+                    else {
+                      encounterEnemy();
+                    }
+                  }}
+                  disabled={currentEnemy || hp <= 0}
+                  className="bg-purple-900 hover:bg-purple-800 disabled:bg-gray-700 disabled:text-gray-500 border border-purple-600 disabled:border-gray-600 px-4 py-2 rounded font-mono transition-all"
+                >
+                  Search
+                </button>
+              )}
             </div>
+            {groundLoot && (
+              <button
+                onClick={pickupGroundLoot}
+                disabled={currentEnemy || hp <= 0}
+                className="mt-2 w-full bg-cyan-900 hover:bg-cyan-800 disabled:bg-gray-700 disabled:text-gray-500 border border-cyan-600 disabled:border-gray-600 px-4 py-2 rounded font-mono transition-all"
+              >
+                Pick Up {groundLoot.item.name}
+              </button>
+            )}
           </div>
 
           <div className="bg-gray-900 border border-green-600 p-4 rounded">
@@ -1467,7 +1603,7 @@ The frozen wastes await you, ${player?.name}.
           </div>
         </div>
 
-        {shopDiscovered && (
+        {isShopDiscovered() && (
           <div className="mt-4 bg-gray-900 border border-yellow-600 rounded">
             <button 
               onClick={() => setShopVisible(!shopVisible)}

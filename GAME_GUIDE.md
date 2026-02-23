@@ -5,14 +5,49 @@ The game now features a three-tier progression system with two distinct worlds a
 
 ## The Journey
 
+### Inn System 🏨
+**Discovery:** 20% chance when searching (not available in boss rooms)
+
+**Purpose:** Safe resting without risk of theft
+
+**Cost:** 20 XP per rest
+
+**Per-World:** Each world (Woods, Tundra) has its own separate inn
+- Must discover inn in each world independently  
+- Woods inn ≠ Tundra inn
+- Both must be found through searching
+
+**Benefits:**
+- Restores to full HP
+- **NO risk of gear being stolen**
+- Safe alternative to camping
+
+**Availability:**
+- Woods: All locations except Dragon's Lair
+- Tundra: All locations except Yeti's Throne
+
+**Strategy:**
+- Use inn when carrying valuable found loot
+- Free rest risks 30% theft of found gear
+- Inn guarantees safety but costs XP
+- Worth it if you have rare loot equipped
+
+---
+
 ### Shop System 🛒
-**Discovery:** The shop has a 40% chance to appear when you use the Search action
+**Discovery:** The shop has a 30% chance to appear when you use the Search action
 
 **Currency:** XP (not gold!)
+
+**Per-World:** Each world (Woods, Tundra) has its own separate shop
+- Must discover shop in each world independently
+- Same items available in both shops
+- Woods shop ≠ Tundra shop
 
 **Mechanics:**
 - **Starting Gear**: Each class begins with basic equipment (cannot be sold or stolen)
 - **Found Loot**: 20% chance when searching (can be sold and stolen)
+- **Ground Loot**: If slot is full, item drops on ground - use "Pick Up" button after unequipping
 - **Shop Items**: Purchased with XP (can be sold at 50% value, but NOT stolen)
 
 **Risk/Reward:**

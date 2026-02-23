@@ -1,6 +1,73 @@
 # Changelog
 
-## v6.2 - Collapsible Shop (Current)
+## v7.1 - Per-World Inn/Shop (Current)
+**Date:** 2025-02-19
+
+### Critical Fix:
+- 🔧 **Per-World Discovery** - Inn and shop are now separate for each world
+- Woods inn ≠ Tundra inn (must discover separately)
+- Woods shop ≠ Tundra shop (must discover separately)
+- Prevents accessing Woods inn from Tundra (doesn't make sense)
+
+### Why This Matters:
+**Before:** Discover inn in Woods → have inn in Tundra (illogical)  
+**After:** Must discover inn separately in each world (makes sense)
+
+**Logic:** You can't teleport back to the Woods inn from the Tundra. Each world has its own locations, including shops and inns.
+
+### Technical Changes:
+- Added `shopDiscoveredTundra` and `innDiscoveredTundra` states
+- Helper functions check current world: `isShopDiscovered()`, `isInnDiscovered()`
+- Save/load preserves all four discovery states
+- UI buttons check current world's discovery status
+
+### Files Changed:
+- `src/mud-terminal.jsx` - Per-world discovery system
+- `GAME_GUIDE.md` - Clarified per-world mechanics
+- `CHANGELOG.md` - This file
+
+---
+
+## v7.0 - Inn & Loot Pickup
+**Date:** 2025-02-19
+
+### Major Features:
+- 🏨 **Inn System** - Safe resting for 20 XP (no theft risk)
+- 🎒 **Loot Pickup** - Ground loot system with "Pick Up" button
+- ✨ Inn discovered via Search (20% chance, not in boss rooms)
+- ✨ Inn persists across worlds
+- ✨ Ground loot stored when inventory full
+
+### Inn Features:
+- Cost: 20 XP per rest
+- Benefit: Full HP restoration
+- Safety: NO risk of gear theft
+- Availability: All locations except Dragon's Lair and Yeti's Throne
+- Strategic choice: Pay XP for safety vs free risky rest
+
+### Loot Pickup Fix:
+**Before:** Find loot with full slot → can't pick up, no way to get it later  
+**After:** Find loot with full slot → drops on ground → unequip → click "Pick Up" button
+
+### UI Changes:
+- Inn button replaces Search when discovered (saves grid space)
+- "Pick Up [item]" button appears below Actions when ground loot present
+- Inn shows cost in button label: "Inn (20 XP)"
+
+### Search Probabilities Updated:
+- 30% → Shop discovery (reduced from 40%)
+- 20% → Inn discovery (new!)
+- 20% → Loot drop
+- 30% → Enemy encounter
+
+### Files Changed:
+- `src/mud-terminal.jsx` - Added inn system, ground loot, pickup button
+- `GAME_GUIDE.md` - Documented inn and pickup mechanics
+- `CHANGELOG.md` - This file
+
+---
+
+## v6.2 - Collapsible Shop
 **Date:** 2025-02-19
 
 ### Major UX Improvement:
