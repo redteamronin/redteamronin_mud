@@ -113,7 +113,8 @@ The game now features a three-tier progression system with two distinct worlds a
 - Dire Wolf (HP: 45, Attack: 12)
 - Forest Troll (HP: 80, Attack: 18)
 - Shadow Wraith (HP: 60, Attack: 22)
-- Ancient Dragon (HP: 150, Attack: 30)
+- Lesser Dragon (HP: 100, Attack: 25)
+- Ancient Dragon (HP: 150, Attack: 30) - **Boss in Dragon's Lair**
 
 **Outcomes:**
 - **Die in the woods** → Basic Terminal (Level 0)

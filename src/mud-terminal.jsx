@@ -322,13 +322,14 @@ const MUDTerminal = () => {
     wolf: { name: 'Dire Wolf', hp: 45, attack: 12, xp: 25, description: 'A massive wolf with glowing red eyes' },
     troll: { name: 'Forest Troll', hp: 80, attack: 18, xp: 40, description: 'A hulking brute with regenerating flesh' },
     wraith: { name: 'Shadow Wraith', hp: 60, attack: 22, xp: 50, description: 'An ethereal being that feeds on fear' },
-    dragon: { name: 'Ancient Dragon', hp: 150, attack: 30, xp: 100, description: 'The apex predator of these woods' },
+    lesser_dragon: { name: 'Lesser Dragon', hp: 100, attack: 25, xp: 70, description: 'A young dragon, still dangerous' },
+    dragon: { name: 'Ancient Dragon', hp: 500, attack: 30, xp: 100, description: 'The apex predator of these woods' },
     // Tundra enemies
     ice_wolf: { name: 'Ice Wolf', hp: 70, attack: 20, xp: 35, description: 'A frost-covered predator with icy fangs' },
     frost_giant: { name: 'Frost Giant', hp: 120, attack: 28, xp: 60, description: 'A towering giant wielding an ice club' },
     wendigo: { name: 'Wendigo', hp: 90, attack: 32, xp: 75, description: 'A cursed spirit of endless hunger' },
     ice_drake: { name: 'Ice Drake', hp: 150, attack: 38, xp: 90, description: 'A dragon of ice and frost' },
-    yeti: { name: 'Ancient Yeti', hp: 999, attack: 50, xp: 200, description: 'The immortal guardian of the frozen wastes' }
+    yeti: { name: 'Ancient Yeti', hp: 9999, attack: 50, xp: 200, description: 'The immortal guardian of the frozen wastes' }
   };
 
   const locations = {
@@ -348,7 +349,7 @@ const MUDTerminal = () => {
     clearing: {
       name: 'Ancient Clearing',
       description: 'A clearing opens before you. In the center stands a massive stone altar, stained with age.',
-      encounters: ['wraith', 'dragon'],
+      encounters: ['wraith', 'lesser_dragon'],
       next: ['deeper', 'lair']
     },
     lair: {
@@ -574,7 +575,29 @@ The frozen wastes await you, ${player?.name}.
     exit: {
       description: 'Logout from terminal',
       execute: () => {
-        return 'Connection closed by remote host.';
+        // Clear the save game and restart
+        setTimeout(() => {
+          localStorage.removeItem('mud-game-state');
+          setGameState('character-select');
+          setPlayer(null);
+          setLocation('start');
+          setHp(100);
+          setMaxHp(100);
+          setLevel(1);
+          setXp(0);
+          setInventory([]);
+          setGameLog([]);
+          setCurrentEnemy(null);
+          setTerminalLevel(0);
+          setCurrentWorld('woods');
+          setShopDiscovered(false);
+          setInnDiscovered(false);
+          setShopDiscoveredTundra(false);
+          setInnDiscoveredTundra(false);
+          setGroundLoot(null);
+          setEquippedGear({ weapon: null, armor: null, accessory: null });
+        }, 1000);
+        return 'Logging out...\nClearing save data...\nReturning to character selection...';
       }
     }
   };
@@ -1052,6 +1075,12 @@ The frozen wastes await you, ${player?.name}.
 
     const currentLoc = locations[location];
     if (currentLoc.next.includes(direction)) {
+      // Clear ground loot when moving - you left it behind
+      if (groundLoot) {
+        addLog(`You leave the ${groundLoot.item.name} behind.`, 'system');
+        setGroundLoot(null);
+      }
+      
       setLocation(direction);
       addLog(`You venture ${direction === 'deeper' ? 'deeper into the woods' : `to the ${locations[direction].name}`}...`, 'system');
       addLog(locations[direction].description, 'location');
@@ -1077,9 +1106,9 @@ The frozen wastes await you, ${player?.name}.
     setHp(newHp);
     addLog(`You rest and recover ${newHp - hp} HP.`, 'system');
     
-    // Check for thief stealing found gear (30% chance)
+    // Check for thief stealing found gear (50% chance)
     let stolenItem = null;
-    if (Math.random() < 0.3) {
+    if (Math.random() < 0.5) {
       // Try to steal weapon, armor, or accessory (in that priority)
       const slots = ['weapon', 'armor', 'accessory'];
       for (const slot of slots) {
@@ -1107,8 +1136,8 @@ The frozen wastes await you, ${player?.name}.
       }
     }
     
-    // Random enemy encounter (50% chance)
-    if (Math.random() > 0.5) {
+    // Random enemy encounter (75% chance)
+    if (Math.random() > 0.75) {
       addLog('But the noise attracted something...', 'system');
       setTimeout(encounterEnemy, 1000);
     }
@@ -1201,6 +1230,7 @@ The frozen wastes await you, ${player?.name}.
     setLocation('tundra_start');
     setGameState('playing');
     setGameLog([]);
+    setGroundLoot(null); // Clear ground loot when transitioning worlds
     // Keep player stats, gear, and shop discovery
     setHp(getEffectiveStats().maxHp); // Heal to full with gear bonuses
     addLog(`The air grows cold. You step into the frozen wastes...`, 'system');
@@ -1534,43 +1564,30 @@ The frozen wastes await you, ${player?.name}.
               >
                 Rest
               </button>
-              {isInnDiscovered() ? (
-                <button
-                  onClick={restAtInn}
-                  disabled={currentEnemy || hp <= 0}
-                  className="bg-green-900 hover:bg-green-800 disabled:bg-gray-700 disabled:text-gray-500 border border-green-600 disabled:border-gray-600 px-4 py-2 rounded font-mono transition-all"
-                >
-                  Inn (20 XP)
-                </button>
-              ) : (
-                  Inn (20 XP)
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    // 30% chance to discover shop if not found in this world
-                    if (!isShopDiscovered() && Math.random() > 0.7) {
-                      discoverShop();
-                    }
-                    // 20% chance to discover inn if not found in this world and not in boss locations
-                    else if (!isInnDiscovered() && location !== 'lair' && location !== 'yeti_throne' && Math.random() < 0.2) {
-                      discoverInn();
-                    }
-                    // 20% chance to find loot
-                    else if (Math.random() < 0.2) {
-                      findLoot();
-                    }
-                    // Otherwise encounter enemy
-                    else {
-                      encounterEnemy();
-                    }
-                  }}
-                  disabled={currentEnemy || hp <= 0}
-                  className="bg-purple-900 hover:bg-purple-800 disabled:bg-gray-700 disabled:text-gray-500 border border-purple-600 disabled:border-gray-600 px-4 py-2 rounded font-mono transition-all"
-                >
-                  Search
-                </button>
-              )}
+              <button
+                onClick={() => {
+                  // 10% chance to discover shop if not found in this world
+                  if (!isShopDiscovered() && Math.random() > 0.9) {
+                    discoverShop();
+                  }
+                  // 10% chance to discover inn if not found in this world and not in boss locations
+                  else if (!isInnDiscovered() && location !== 'lair' && location !== 'yeti_throne' && Math.random() < 0.1) {
+                    discoverInn();
+                  }
+                  // 10% chance to find loot
+                  else if (Math.random() < 0.1) {
+                    findLoot();
+                  }
+                  // Otherwise encounter enemy
+                  else {
+                    encounterEnemy();
+                  }
+                }}
+                disabled={currentEnemy || hp <= 0}
+                className="bg-purple-900 hover:bg-purple-800 disabled:bg-gray-700 disabled:text-gray-500 border border-purple-600 disabled:border-gray-600 px-4 py-2 rounded font-mono transition-all"
+              >
+                Search
+              </button>
             </div>
             {groundLoot && (
               <button
@@ -1596,7 +1613,16 @@ The frozen wastes await you, ${player?.name}.
                   Go to {locations[loc]?.name}
                 </button>
               ))}
-              {locations[location]?.next.length === 0 && (
+              {isInnDiscovered() && location !== 'lair' && location !== 'yeti_throne' && (
+                <button
+                  onClick={restAtInn}
+                  disabled={currentEnemy || hp <= 0}
+                  className="w-full bg-amber-900 hover:bg-amber-800 disabled:bg-gray-700 disabled:text-gray-500 border border-amber-600 disabled:border-gray-600 px-4 py-2 rounded font-mono transition-all"
+                >
+                  Rest at Inn (20 XP)
+                </button>
+              )}
+              {locations[location]?.next.length === 0 && !isInnDiscovered() && (
                 <div className="text-gray-500 text-sm font-mono">No exits available</div>
               )}
             </div>
